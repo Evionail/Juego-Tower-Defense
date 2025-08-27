@@ -428,7 +428,7 @@
             border-color: var(--highlight-color);
             color: var(--primary-bg);
             font-weight: bold;
-            display: none; /* Oculto por defecto, se muestra con JS */
+            display: none; /* CORRECCIÓN: Oculto por defecto */
         }
         #fullscreen-button:hover {
             opacity: 0.9;
@@ -437,7 +437,7 @@
             color: var(--primary-bg);
         }
         body.is-touch #fullscreen-button {
-            display: block;
+            display: block; /* CORRECCIÓN: Se muestra solo en dispositivos táctiles */
         }
 
         #fullscreen-helper { display: none; font-size: 0.75em; color: #aaa; text-align: center; margin-top: -15px; }
@@ -447,7 +447,7 @@
         #tutorial-highlight { position: absolute; border: 3px dashed #FFD700; border-radius: 8px; box-shadow: 0 0 20px #FFD700; transition: all 0.3s ease; pointer-events: none; }
         #tutorial-message-box { position: absolute; background-color: rgba(0,0,0,0.85); color: white; padding: 12px; border-radius: 8px; border: 2px solid #FFD700; max-width: 240px; font-size: 0.9em; line-height: 1.4; pointer-events: all; transition: top 0.4s ease, left 0.4s ease; }
         .clickable { pointer-events: all !important; }
-        #version-display { position: absolute; bottom: 15px; left: 15px; font-size: 0.9em; color: #888; }
+        #version-display { position: absolute; top: 15px; left: 15px; font-size: 0.9em; color: #888; }
         #dev-tools-button { display: none; background-color: #ff00ff; }
         #dev-tools-button:hover { background-color: #c000c0; }
         .dev-options { display: flex; flex-direction: column; gap: 15px; align-items: center; }
@@ -1713,17 +1713,38 @@
                 this.game = game; this.x = x; this.y = y;
                 this.type = config.type;
                 const typeData = ENEMY_TYPES[this.type];
-                const modifiers = DIFFICULTY_MODIFIERS[game.difficulty];
+                const baseModifiers = DIFFICULTY_MODIFIERS[game.difficulty];
+
+                let finalHealthMod = baseModifiers.enemyHealth;
+                let finalSpeedMod = baseModifiers.enemySpeed;
+
+                // Lógica de dificultad progresiva
+                if (game.difficulty === 'hard') {
+                    if (game.waveNumber === 1) { finalHealthMod = 1.1; finalSpeedMod = 1.1; }
+                    else if (game.waveNumber === 2) { finalHealthMod = 1.2; finalSpeedMod = 1.2; }
+                    else if (game.waveNumber === 3) { finalHealthMod = 1.3; finalSpeedMod = 1.3; }
+                }
+
+                let waveSpeedMultiplier = 1 + game.waveNumber * 0.05;
+                let waveHealthMultiplier = 1 + (game.waveNumber * 0.075);
+
+                if (game.waveNumber <= 5 && game.difficulty !== 'hard') {
+                    waveHealthMultiplier *= 0.7;
+                    waveSpeedMultiplier *= 0.85;
+                }
+
                 this.isFlying = config.isFlying || typeData.isFlying;
-                this.speed = typeData.speed * (1 + game.waveNumber * 0.05) * modifiers.enemySpeed;
-                let healthMultiplier = 1 + (game.waveNumber * 0.075);
-                if (game.waveNumber <= 5) { healthMultiplier *= 0.7; this.speed *= 0.85; }
-                this.maxHealth = Math.floor(baseHealth * typeData.health * healthMultiplier * modifiers.enemyHealth); 
+                this.speed = typeData.speed * waveSpeedMultiplier * finalSpeedMod;
+                this.maxHealth = Math.floor(baseHealth * typeData.health * waveHealthMultiplier * finalHealthMod);
+                
                 if (['boss', 'healer', 'disabler'].includes(this.type)) { this.maxHealth *= 2; }
+
                 this.health = this.maxHealth;
                 this.value = Math.floor(baseValue * typeData.value);
                 let damageToDeal = typeData.baseDamage;
+
                 if (config.isTutorial) { this.health *= 0.5; this.maxHealth *= 0.5; this.value *= 3; damageToDeal = 20; }
+
                 this.baseDamage = damageToDeal;
                 this.width = TILE_SIZE * typeData.size; this.height = TILE_SIZE * typeData.size;
                 this.color = typeData.color;
@@ -2795,7 +2816,6 @@
                 stopMainMenuAnimation();
                 document.body.style.backgroundColor = 'var(--primary-bg)';
                 
-                // CORRECCIÓN: Función para cambiar el tema sin borrar otras clases
                 function setBodyTheme(themeName) {
                     document.body.classList.remove('theme-classic', 'theme-serpentine', 'theme-crossroads', 'theme-direct');
                     if (themeName) {
