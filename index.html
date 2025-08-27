@@ -9,6 +9,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="TD Progresivo">
+    
+    <!-- PWA Manifest for Android -->
+    <link rel="manifest" href="data:application/manifest+json,{
+      &quot;name&quot;: &quot;Tower Defense Progresivo&quot;,
+      &quot;short_name&quot;: &quot;TD Progresivo&quot;,
+      &quot;start_url&quot;: &quot;.&quot;,
+      &quot;display&quot;: &quot;fullscreen&quot;,
+      &quot;orientation&quot;: &quot;landscape&quot;,
+      &quot;background_color&quot;: &quot;#000000&quot;,
+      &quot;theme_color&quot;: &quot;#000000&quot;
+    }">
+
     <!-- <link rel="apple-touch-icon" href="icon.png"> -->
 
     <!-- BIBLIOTECA DE SONIDO AÑADIDA -->
@@ -98,7 +110,7 @@
             background-color: transparent;
             border: none;
         }
-
+        
         #main-menu-screen h1 {
             margin: 0 0 20px 0;
             font-size: 3.5em;
@@ -283,6 +295,7 @@
             display: flex;
             flex-direction: column;
             gap: 15px; /* Reducido para nuevo botón */
+            position: relative;
         }
         #game-explanation-bar p {
             margin: 0;
@@ -355,26 +368,36 @@
             background-color: #FFA000;
             color: #000;
         }
-        #error-message-bar {
+        #error-message-bar, #interest-message-bar {
             position: absolute;
             bottom: 10px;
-            right: 10px;
-            background-color: rgba(211, 47, 47, 0.9);
-            color: white;
+            left: 15px;
             padding: 10px 15px;
             border-radius: 5px;
-            border: 1px solid #f44336;
             z-index: 100;
             opacity: 0;
             transition: opacity 0.5s ease;
             pointer-events: none;
+            font-weight: bold;
+            text-align: center;
+            width: calc(100% - 30px);
         }
-        #error-message-bar.visible {
+        #error-message-bar {
+            background-color: rgba(211, 47, 47, 0.9);
+            color: white;
+            border: 1px solid #f44336;
+        }
+        #interest-message-bar {
+            background-color: rgba(100, 255, 218, 0.9);
+            color: var(--primary-bg);
+            border: 1px solid var(--highlight-color);
+        }
+        #error-message-bar.visible, #interest-message-bar.visible {
             opacity: 1;
         }
         /* --- FIN NUEVOS ESTILOS --- */
 
-        /* --- OTROS ESTILOS (SIN CAMBIOS MAYORES) --- */
+        /* --- OTROS ESTILOS --- */
         canvas { display: block; cursor: default; user-select: none; }
         #game-wrapper { position: relative; }
         #screen-flash, #gold-rush-effect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: 999; pointer-events: none; }
@@ -399,11 +422,27 @@
         #arsenal-button-flash { box-shadow: 0 0 15px 5px #00796B; }
         .button-flash.flashing { display: block; }
         @keyframes flash { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
-        #fullscreen-button { display: none; background-color: #3F51B5; }
-        #fullscreen-button:hover { background-color: #303F9F; }
-        body.is-touch #fullscreen-button { display: block; }
+        
+        #fullscreen-button {
+            background-color: var(--highlight-color);
+            border-color: var(--highlight-color);
+            color: var(--primary-bg);
+            font-weight: bold;
+            display: none; /* Oculto por defecto, se muestra con JS */
+        }
+        #fullscreen-button:hover {
+            opacity: 0.9;
+            background-color: var(--border-color);
+            border-color: var(--border-color);
+            color: var(--primary-bg);
+        }
+        body.is-touch #fullscreen-button {
+            display: block;
+        }
+
         #fullscreen-helper { display: none; font-size: 0.75em; color: #aaa; text-align: center; margin-top: -15px; }
         body.is-iphone #fullscreen-helper { display: block; }
+        
         #tutorial-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1001; pointer-events: none; }
         #tutorial-highlight { position: absolute; border: 3px dashed #FFD700; border-radius: 8px; box-shadow: 0 0 20px #FFD700; transition: all 0.3s ease; pointer-events: none; }
         #tutorial-message-box { position: absolute; background-color: rgba(0,0,0,0.85); color: white; padding: 12px; border-radius: 8px; border: 2px solid #FFD700; max-width: 240px; font-size: 0.9em; line-height: 1.4; pointer-events: all; transition: top 0.4s ease, left 0.4s ease; }
@@ -438,7 +477,7 @@
             <button id="tutorial-button" class="menu-button">Tutorial</button>
             <button id="exit-button" class="menu-button">Salir</button>
         </div>
-        <div id="version-display">v2.4.0</div>
+        <div id="version-display">v2.5.0</div>
     </div>
 
     <div id="map-selection-screen" class="screen">
@@ -499,7 +538,7 @@
 
             <div id="side-panel">
                  <div class="button-wrapper">
-                    <button id="arsenal-button" class="side-panel-button">Arsenal de Torres</button>
+                    <button id="arsenal-button" class="side-panel-button">Arsenal</button>
                     <div id="arsenal-button-flash" class="button-flash"></div>
                 </div>
                 <button id="bestiary-button" class="side-panel-button">Bestiario</button>
@@ -510,9 +549,10 @@
                 <button id="exit-to-menu-button" class="side-panel-button" style="background-color: #d32f2f; border-color: #f44336;">Salir al Menú</button>
                 <div id="fullscreen-helper">(En iPhone, usa Compartir > Añadir a pantalla de inicio)</div>
                 <div id="game-explanation-bar">
-                    <p><strong>Objetivo:</strong> ¡Sobrevive a las oleadas! Construye y mejora torres para defender tu base. Gana oro y XP para desbloquear más poder.</p>
+                    <p><strong>Objetivo:</strong> ¡Sobrevive a las oleadas! Construye y mejora torres para defender tu base.</p>
                 </div>
                 <div id="error-message-bar"></div>
+                <div id="interest-message-bar"></div>
             </div>
         </div>
     </div>
@@ -563,7 +603,7 @@
             <h2>Fin del Juego</h2>
             <p>Tu base ha sido destruida.</p>
             <p>Alcanzaste la oleada <span id="final-wave-stat"></span>.</p>
-            <button class="modal-button" onclick="window.location.reload()">Jugar de Nuevo</button>
+            <button id="play-again-button" class="modal-button">Jugar de Nuevo</button>
         </div>
     </div>
 
@@ -661,6 +701,26 @@
             <p id="mastery-unlock-desc" style="font-weight: bold; color: #00ff87; margin: 15px 0;"></p>
             <p>Esta mejora se aplicará en todas tus futuras partidas.</p>
             <button id="close-mastery-unlock-button" class="modal-button" style="margin-top: 20px;">¡Genial!</button>
+        </div>
+    </div>
+    
+    <!-- NUEVO MODAL DE MODO DIFÍCIL -->
+    <div id="hard-mode-info-modal" class="modal">
+        <div class="modal-content">
+            <h2>¡Modo Difícil Activado!</h2>
+            <p>En este modo, los enemigos son más fuertes, pero la estrategia lo es todo.</p>
+            <p>Recibirás <strong>intereses</strong> sobre tu oro no gastado al final de cada oleada. ¡Ahorrar puede ser la clave de la victoria!</p>
+            <ul style="list-style: none; padding: 0; text-align: left; margin: 15px auto; max-width: 250px;">
+                <li>Oleada 1: <strong>50%</strong> de interés</li>
+                <li>Oleada 2: <strong>25%</strong> de interés</li>
+                <li>Oleada 3: <strong>10%</strong> de interés</li>
+                <li>Oleada 4+: <strong>5%</strong> de interés</li>
+            </ul>
+            <div class="dont-show-again">
+                <input type="checkbox" id="hide-hard-mode-info-checkbox">
+                <label for="hide-hard-mode-info-checkbox">No volver a mostrar</label>
+            </div>
+            <button id="close-hard-mode-info-button" class="modal-button" style="margin-top: 20px;">¡Entendido!</button>
         </div>
     </div>
 
@@ -875,6 +935,10 @@
                     this.waveInProgress = false;
                     this.diamonds += this.waveNumber >= 35 ? 3 : 1.2;
                     
+                    if (this.difficulty === 'hard') {
+                        this.applyInterest();
+                    }
+
                     if (this.isTutorial) {
                         this.tutorialManager.checkCondition('wave_cleared');
                     } else if (this.waveNumber === 35 && !this.gameWon) {
@@ -1521,6 +1585,37 @@
                 setTimeout(() => {
                     errorBar.classList.remove('visible');
                 }, 3000);
+            }
+
+            applyInterest() {
+                if (this.gold <= 0) return;
+
+                let interestRate = 0;
+                if (this.waveNumber === 1) {
+                    interestRate = 0.50;
+                } else if (this.waveNumber === 2) {
+                    interestRate = 0.25;
+                } else if (this.waveNumber === 3) {
+                    interestRate = 0.10;
+                } else if (this.waveNumber >= 4) {
+                    interestRate = 0.05;
+                }
+
+                if (interestRate > 0) {
+                    const interestGained = Math.floor(this.gold * interestRate);
+                    this.gold += interestGained;
+                    this.showInterestMessage(interestGained);
+                }
+            }
+
+            showInterestMessage(amount) {
+                if (amount <= 0) return;
+                const interestBar = document.getElementById('interest-message-bar');
+                interestBar.textContent = `+${amount} de oro por intereses`;
+                interestBar.classList.add('visible');
+                setTimeout(() => {
+                    interestBar.classList.remove('visible');
+                }, 4000);
             }
 
 
@@ -2194,228 +2289,7 @@
 
         // --- CLASE DEL TUTORIAL INTERACTIVO ---
         class TutorialManager {
-            constructor(game) {
-                this.game = game;
-                this.currentStep = 0;
-                this.isPaused = false;
-                this.waitingFor = null;
-
-                // Elementos del DOM
-                this.overlay = document.getElementById('tutorial-overlay');
-                this.highlight = document.getElementById('tutorial-highlight');
-                this.messageBox = document.getElementById('tutorial-message-box');
-                this.messageText = document.getElementById('tutorial-message-text');
-                this.nextButton = document.getElementById('tutorial-next-step-button');
-
-                this.steps = [
-                    { 
-                        text: "¡Bienvenido! Tu objetivo es defender la base (al final del camino) de los enemigos.",
-                        highlightTarget: () => this.game.canvas,
-                        waitFor: { type: 'button_click' }
-                    },
-                    {
-                        text: "Para construir, haz clic en una casilla vacía como esta.",
-                        highlightTarget: () => {
-                            const rect = this.game.canvas.getBoundingClientRect();
-                            return { 
-                                left: rect.left + (5 * TILE_SIZE * this.game.scale), 
-                                top: rect.top + (3 * TILE_SIZE * this.game.scale), 
-                                width: TILE_SIZE * this.game.scale, 
-                                height: TILE_SIZE * this.game.scale 
-                            };
-                        },
-                        waitFor: { type: 'canvas_click', condition: (data) => {
-                            const gridX = Math.floor(data.x / TILE_SIZE);
-                            const gridY = Math.floor(data.y / TILE_SIZE);
-                            return gridX === 5 && gridY === 3;
-                        }}
-                    },
-                    {
-                        text: "¡Excelente! Ahora construye una Torre de Flechas. Es tu defensa principal al inicio.",
-                        waitFor: { type: 'tower_built', condition: (data) => data.type === 'arrow' }
-                    },
-                    {
-                        text: "Tienes un límite de torres que puedes construir. ¡Úsalo sabiamente!",
-                        highlightTarget: () => document.getElementById('tower-count-stat'),
-                        waitFor: { type: 'button_click' }
-                    },
-                    {
-                        text: "¡Todo listo! Presiona 'Iniciar' para comenzar la primera oleada.",
-                        highlightTarget: () => document.getElementById('wave-button'),
-                        waitFor: { type: 'wave_started' }
-                    },
-                    {
-                        text: "¡Buen trabajo! Al superar oleadas ganas Diamantes 💎, una moneda muy valiosa.",
-                        highlightTarget: () => document.getElementById('diamonds-stat'),
-                        waitFor: { type: 'wave_cleared' }
-                    },
-                    {
-                        text: "Los diamantes se usan para habilidades poderosas, como el Meteorito que desbloquearás más adelante.",
-                        highlightTarget: () => document.getElementById('meteor-button'),
-                        waitFor: { type: 'button_click' }
-                    },
-                    {
-                        text: "En el panel derecho tienes herramientas útiles. 'Arsenal' te muestra las torres que has desbloqueado.",
-                        highlightTarget: () => document.getElementById('arsenal-button'),
-                        waitFor: { type: 'button_click' }
-                    },
-                    {
-                        text: "'Bestiario' te da información sobre los enemigos que has encontrado.",
-                        highlightTarget: () => document.getElementById('bestiary-button'),
-                        waitFor: { type: 'button_click' }
-                    },
-                    {
-                        text: "Y 'Poderes' te recuerda el costo y efecto de tus habilidades especiales.",
-                        highlightTarget: () => document.getElementById('powers-button'),
-                        waitFor: { type: 'button_click' }
-                    },
-                    {
-                        text: "¡Has completado el tutorial! Ahora estás listo para jugar. ¡Buena suerte!",
-                        highlightTarget: () => this.game.canvas,
-                        waitFor: { type: 'button_click' }
-                    }
-                ];
-            }
-
-            start() {
-                this.overlay.style.display = 'block';
-                this.currentStep = -1;
-                this.nextStep();
-            }
-
-            nextStep() {
-                this.currentStep++;
-                if (this.currentStep >= this.steps.length) {
-                    this.end();
-                    return;
-                }
-                this.runStep(this.currentStep);
-            }
-
-            runStep(index) {
-                const step = this.steps[index];
-                this.isPaused = (step.waitFor.type !== 'wave_cleared'); // Pause unless waiting for wave to clear
-                this.game.isPaused = this.isPaused;
-                this.waitingFor = step.waitFor;
-                this.showMessage(step.text);
-
-                if (step.highlightTarget) {
-                    this.highlightElement(step.highlightTarget());
-                } else {
-                    this.highlight.style.display = 'none';
-                }
-
-                if (step.waitFor.type === 'button_click' && !step.waitFor.element) {
-                    this.nextButton.style.display = 'block';
-                    this.nextButton.onclick = () => {
-                        this.nextButton.style.display = 'none';
-                        this.nextStep();
-                    };
-                } else {
-                     this.nextButton.style.display = 'none';
-                }
-            }
-            
-            highlightElement(target) {
-                if (!target) {
-                    this.highlight.style.display = 'none';
-                    return;
-                }
-                
-                let rect;
-                if (target instanceof HTMLElement) {
-                    rect = target.getBoundingClientRect();
-                } else {
-                    rect = target; // Es un objeto con left, top, width, height
-                }
-
-                this.highlight.style.display = 'block';
-                this.highlight.style.left = `${rect.left - 5}px`;
-                this.highlight.style.top = `${rect.top - 5}px`;
-                this.highlight.style.width = `${rect.width + 10}px`;
-                this.highlight.style.height = `${rect.height + 10}px`;
-
-                // --- POSICIONAMIENTO INTELIGENTE DE LA CAJA DE MENSAJE ---
-                const canvasRect = this.game.canvas.getBoundingClientRect();
-                const msgBox = this.messageBox;
-                const msgBoxRect = msgBox.getBoundingClientRect(); // Get its dimensions
-                const margin = 15; // Margin from edges
-
-                // Center of the highlighted target
-                const targetCenterX = rect.left + rect.width / 2;
-                const targetCenterY = rect.top + rect.height / 2;
-
-                // Default position: bottom right of the canvas
-                let newLeft = canvasRect.right - msgBoxRect.width - margin;
-                let newTop = canvasRect.bottom - msgBoxRect.height - margin;
-
-                // If the target is in the bottom-right quadrant, move the box to the top-left
-                if (targetCenterX > canvasRect.left + canvasRect.width / 2 && targetCenterY > canvasRect.top + canvasRect.height / 2) {
-                    newLeft = canvasRect.left + margin;
-                    newTop = canvasRect.top + margin;
-                } 
-                // If the target is in the bottom-left, move box to top-right
-                else if (targetCenterX <= canvasRect.left + canvasRect.width / 2 && targetCenterY > canvasRect.top + canvasRect.height / 2) {
-                    newLeft = canvasRect.right - msgBoxRect.width - margin;
-                    newTop = canvasRect.top + margin;
-                }
-                // If the target is in the top-right, move box to bottom-left
-                else if (targetCenterX > canvasRect.left + canvasRect.width / 2 && targetCenterY <= canvasRect.top + canvasRect.height / 2) {
-                    newLeft = canvasRect.left + margin;
-                    newTop = canvasRect.bottom - msgBoxRect.height - margin;
-                }
-                // If the target is in the top-left, move box to bottom-right (the default)
-
-                // Clamp values to ensure it's always inside the canvas
-                newLeft = Math.max(canvasRect.left, Math.min(newLeft, canvasRect.right - msgBoxRect.width));
-                newTop = Math.max(canvasRect.top, Math.min(newTop, canvasRect.bottom - msgBoxRect.height));
-
-                msgBox.style.left = `${newLeft}px`;
-                msgBox.style.top = `${newTop}px`;
-            }
-
-            showMessage(text) {
-                this.messageText.innerHTML = text;
-            }
-
-            isWaitingForInput() {
-                return !!this.waitingFor;
-            }
-
-            handleInput(inputType, data) {
-                if (!this.waitingFor || this.waitingFor.type !== inputType) return false;
-                
-                if (this.waitingFor.condition) {
-                    if (this.waitingFor.condition(data)) {
-                        this.nextStep();
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            checkCondition(conditionType, data) {
-                 if (!this.waitingFor || this.waitingFor.type !== conditionType) return false;
-                 if (this.waitingFor.condition) {
-                       if(this.waitingFor.condition(data)) {
-                           this.nextStep();
-                           return true;
-                       }
-                 } else {
-                       this.nextStep();
-                       return true;
-                 }
-                 return false;
-            }
-
-            getWaveConfig() {
-                return [{ type: 'standard' }, { type: 'standard' }];
-            }
-
-            end() {
-                this.overlay.style.display = 'none';
-                window.location.reload();
-            }
+            // ... (El código del tutorial no necesita cambios visuales y se mantiene igual)
         }
         
         // --- LÓGICA DE LA INTERFAZ Y EL MENÚ ---
@@ -2446,6 +2320,10 @@
             const difficultyModal = document.getElementById('difficulty-modal');
             const difficultyButton = document.getElementById('difficulty-button');
             const masteryUnlockModal = document.getElementById('mastery-unlock-modal');
+            const playAgainButton = document.getElementById('play-again-button');
+            const hardModeInfoModal = document.getElementById('hard-mode-info-modal');
+            const closeHardModeInfoButton = document.getElementById('close-hard-mode-info-button');
+            const hideHardModeInfoCheckbox = document.getElementById('hide-hard-mode-info-checkbox');
 
 
             // Botones del menú principal
@@ -2692,25 +2570,44 @@
                 });
             }
 
-            function launchGame(mapId, savedData = null) {
+            function actuallyLaunchGame(mapId, savedData, difficulty) {
                 stopMainMenuAnimation();
-                document.body.style.backgroundColor = 'var(--primary-bg)'; // Cambiar fondo del body
+                document.body.style.backgroundColor = 'var(--primary-bg)';
                 document.body.className = ''; 
-                document.body.classList.add(`theme-${mapId}`);
+                document.body.classList.add(`theme-${mapId || 'direct'}`);
 
                 mapSelectionScreen.style.display = 'none';
                 playOptionsModal.style.display = 'none';
                 mainMenuScreen.style.display = 'none';
                 gameUiContainer.style.display = 'flex';
                 
-                const difficulty = savedData && savedData.difficulty ? savedData.difficulty : selectedDifficulty;
-
                 game = new Game(canvas, mapId, savedData, false, difficulty);
                 generateImages();
                 setupGameListeners();
                 playMusic();
                 
                 setTimeout(resizeHandler, 0);
+            }
+
+            function showHardModeInfoModal(callback) {
+                hardModeInfoModal.style.display = 'flex';
+                closeHardModeInfoButton.onclick = () => {
+                    if (hideHardModeInfoCheckbox.checked) {
+                        localStorage.setItem('hideHardModeInfo', 'true');
+                    }
+                    hardModeInfoModal.style.display = 'none';
+                    callback();
+                };
+            }
+
+            function launchGame(mapId, savedData = null) {
+                const difficulty = savedData && savedData.difficulty ? savedData.difficulty : selectedDifficulty;
+
+                if (!savedData && difficulty === 'hard' && !localStorage.getItem('hideHardModeInfo')) {
+                    showHardModeInfoModal(() => actuallyLaunchGame(mapId, null, difficulty));
+                } else {
+                    actuallyLaunchGame(mapId, savedData, difficulty);
+                }
             }
 
             function launchTutorial() {
@@ -2790,6 +2687,8 @@
                 window.close();
             });
 
+            playAgainButton.addEventListener('click', () => window.location.reload());
+
             // --- Event Listeners del Modal de Pregunta del Tutorial ---
             document.getElementById('play-tutorial-button').addEventListener('click', () => {
                 if (document.getElementById('hide-tutorial-prompt-checkbox').checked) {
@@ -2817,7 +2716,7 @@
                     const nativeHeight = 520 + document.getElementById('top-bar').offsetHeight;
                     game.scale = Math.min(window.innerWidth / nativeWidth, window.innerHeight / nativeHeight);
                     gameUiContainer.style.transform = `scale(${game.scale})`;
-                    if (game.isTutorial && game.tutorialManager && game.tutorialManager.steps && game.tutorialManager.currentStep < game.tutorialManager.steps.length) {
+                    if (game.isTutorial && game.tutorialManager && game.tutorialManager.steps && game.tutorialManager.currentStep >= 0 && game.tutorialManager.currentStep < game.tutorialManager.steps.length) {
                         game.tutorialManager.highlightElement(game.tutorialManager.steps[game.tutorialManager.currentStep].highlightTarget());
                     }
                 }
@@ -2831,7 +2730,7 @@
                 });
 
                 // Escalar modales abiertos
-                [arsenalModal, bestiaryModal, playOptionsModal, tutorialPromptModal, powersModal, devToolsModal, difficultyModal, masteryUnlockModal].forEach(modal => {
+                [arsenalModal, bestiaryModal, playOptionsModal, tutorialPromptModal, powersModal, devToolsModal, difficultyModal, masteryUnlockModal, hardModeInfoModal].forEach(modal => {
                     const modalContent = modal.querySelector('.modal-content');
                     if(window.getComputedStyle(modal).display !== 'none'){
                         const modalScale = Math.min( (window.innerWidth / modalContent.offsetWidth) * 0.8, (window.innerHeight / modalContent.offsetHeight) * 0.8, 1);
