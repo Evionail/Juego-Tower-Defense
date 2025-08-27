@@ -10,12 +10,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="TD Progresivo">
     
-    <!-- PWA Manifest for Android -->
+    <!-- PWA Manifest for Android - CORRECCIÓN: 'display' cambiado a 'standalone' para mayor compatibilidad -->
     <link rel="manifest" href="data:application/manifest+json,{
       &quot;name&quot;: &quot;Tower Defense Progresivo&quot;,
       &quot;short_name&quot;: &quot;TD Progresivo&quot;,
       &quot;start_url&quot;: &quot;.&quot;,
-      &quot;display&quot;: &quot;fullscreen&quot;,
+      &quot;display&quot;: &quot;standalone&quot;,
       &quot;orientation&quot;: &quot;landscape&quot;,
       &quot;background_color&quot;: &quot;#000000&quot;,
       &quot;theme_color&quot;: &quot;#000000&quot;
@@ -2289,7 +2289,228 @@
 
         // --- CLASE DEL TUTORIAL INTERACTIVO ---
         class TutorialManager {
-            // ... (El código del tutorial no necesita cambios visuales y se mantiene igual)
+            constructor(game) {
+                this.game = game;
+                this.currentStep = 0;
+                this.isPaused = false;
+                this.waitingFor = null;
+
+                // Elementos del DOM
+                this.overlay = document.getElementById('tutorial-overlay');
+                this.highlight = document.getElementById('tutorial-highlight');
+                this.messageBox = document.getElementById('tutorial-message-box');
+                this.messageText = document.getElementById('tutorial-message-text');
+                this.nextButton = document.getElementById('tutorial-next-step-button');
+
+                this.steps = [
+                    { 
+                        text: "¡Bienvenido! Tu objetivo es defender la base (al final del camino) de los enemigos.",
+                        highlightTarget: () => this.game.canvas,
+                        waitFor: { type: 'button_click' }
+                    },
+                    {
+                        text: "Para construir, haz clic en una casilla vacía como esta.",
+                        highlightTarget: () => {
+                            const rect = this.game.canvas.getBoundingClientRect();
+                            return { 
+                                left: rect.left + (5 * TILE_SIZE * this.game.scale), 
+                                top: rect.top + (3 * TILE_SIZE * this.game.scale), 
+                                width: TILE_SIZE * this.game.scale, 
+                                height: TILE_SIZE * this.game.scale 
+                            };
+                        },
+                        waitFor: { type: 'canvas_click', condition: (data) => {
+                            const gridX = Math.floor(data.x / TILE_SIZE);
+                            const gridY = Math.floor(data.y / TILE_SIZE);
+                            return gridX === 5 && gridY === 3;
+                        }}
+                    },
+                    {
+                        text: "¡Excelente! Ahora construye una Torre de Flechas. Es tu defensa principal al inicio.",
+                        waitFor: { type: 'tower_built', condition: (data) => data.type === 'arrow' }
+                    },
+                    {
+                        text: "Tienes un límite de torres que puedes construir. ¡Úsalo sabiamente!",
+                        highlightTarget: () => document.getElementById('tower-count-stat'),
+                        waitFor: { type: 'button_click' }
+                    },
+                    {
+                        text: "¡Todo listo! Presiona 'Iniciar' para comenzar la primera oleada.",
+                        highlightTarget: () => document.getElementById('wave-button'),
+                        waitFor: { type: 'wave_started' }
+                    },
+                    {
+                        text: "¡Buen trabajo! Al superar oleadas ganas Diamantes 💎, una moneda muy valiosa.",
+                        highlightTarget: () => document.getElementById('diamonds-stat'),
+                        waitFor: { type: 'wave_cleared' }
+                    },
+                    {
+                        text: "Los diamantes se usan para habilidades poderosas, como el Meteorito que desbloquearás más adelante.",
+                        highlightTarget: () => document.getElementById('meteor-button'),
+                        waitFor: { type: 'button_click' }
+                    },
+                    {
+                        text: "En el panel derecho tienes herramientas útiles. 'Arsenal' te muestra las torres que has desbloqueado.",
+                        highlightTarget: () => document.getElementById('arsenal-button'),
+                        waitFor: { type: 'button_click' }
+                    },
+                    {
+                        text: "'Bestiario' te da información sobre los enemigos que has encontrado.",
+                        highlightTarget: () => document.getElementById('bestiary-button'),
+                        waitFor: { type: 'button_click' }
+                    },
+                    {
+                        text: "Y 'Poderes' te recuerda el costo y efecto de tus habilidades especiales.",
+                        highlightTarget: () => document.getElementById('powers-button'),
+                        waitFor: { type: 'button_click' }
+                    },
+                    {
+                        text: "¡Has completado el tutorial! Ahora estás listo para jugar. ¡Buena suerte!",
+                        highlightTarget: () => this.game.canvas,
+                        waitFor: { type: 'button_click' }
+                    }
+                ];
+            }
+
+            start() {
+                this.overlay.style.display = 'block';
+                this.currentStep = -1;
+                this.nextStep();
+            }
+
+            nextStep() {
+                this.currentStep++;
+                if (this.currentStep >= this.steps.length) {
+                    this.end();
+                    return;
+                }
+                this.runStep(this.currentStep);
+            }
+
+            runStep(index) {
+                const step = this.steps[index];
+                this.isPaused = (step.waitFor.type !== 'wave_cleared'); // Pause unless waiting for wave to clear
+                this.game.isPaused = this.isPaused;
+                this.waitingFor = step.waitFor;
+                this.showMessage(step.text);
+
+                if (step.highlightTarget) {
+                    this.highlightElement(step.highlightTarget());
+                } else {
+                    this.highlight.style.display = 'none';
+                }
+
+                if (step.waitFor.type === 'button_click' && !step.waitFor.element) {
+                    this.nextButton.style.display = 'block';
+                    this.nextButton.onclick = () => {
+                        this.nextButton.style.display = 'none';
+                        this.nextStep();
+                    };
+                } else {
+                     this.nextButton.style.display = 'none';
+                }
+            }
+            
+            highlightElement(target) {
+                if (!target) {
+                    this.highlight.style.display = 'none';
+                    return;
+                }
+                
+                let rect;
+                if (target instanceof HTMLElement) {
+                    rect = target.getBoundingClientRect();
+                } else {
+                    rect = target; // Es un objeto con left, top, width, height
+                }
+
+                this.highlight.style.display = 'block';
+                this.highlight.style.left = `${rect.left - 5}px`;
+                this.highlight.style.top = `${rect.top - 5}px`;
+                this.highlight.style.width = `${rect.width + 10}px`;
+                this.highlight.style.height = `${rect.height + 10}px`;
+
+                // --- POSICIONAMIENTO INTELIGENTE DE LA CAJA DE MENSAJE ---
+                const canvasRect = this.game.canvas.getBoundingClientRect();
+                const msgBox = this.messageBox;
+                const msgBoxRect = msgBox.getBoundingClientRect(); // Get its dimensions
+                const margin = 15; // Margin from edges
+
+                // Center of the highlighted target
+                const targetCenterX = rect.left + rect.width / 2;
+                const targetCenterY = rect.top + rect.height / 2;
+
+                // Default position: bottom right of the canvas
+                let newLeft = canvasRect.right - msgBoxRect.width - margin;
+                let newTop = canvasRect.bottom - msgBoxRect.height - margin;
+
+                // If the target is in the bottom-right quadrant, move the box to the top-left
+                if (targetCenterX > canvasRect.left + canvasRect.width / 2 && targetCenterY > canvasRect.top + canvasRect.height / 2) {
+                    newLeft = canvasRect.left + margin;
+                    newTop = canvasRect.top + margin;
+                } 
+                // If the target is in the bottom-left, move box to top-right
+                else if (targetCenterX <= canvasRect.left + canvasRect.width / 2 && targetCenterY > canvasRect.top + canvasRect.height / 2) {
+                    newLeft = canvasRect.right - msgBoxRect.width - margin;
+                    newTop = canvasRect.top + margin;
+                }
+                // If the target is in the top-right, move box to bottom-left
+                else if (targetCenterX > canvasRect.left + canvasRect.width / 2 && targetCenterY <= canvasRect.top + canvasRect.height / 2) {
+                    newLeft = canvasRect.left + margin;
+                    newTop = canvasRect.bottom - msgBoxRect.height - margin;
+                }
+                // If the target is in the top-left, move box to bottom-right (the default)
+
+                // Clamp values to ensure it's always inside the canvas
+                newLeft = Math.max(canvasRect.left, Math.min(newLeft, canvasRect.right - msgBoxRect.width));
+                newTop = Math.max(canvasRect.top, Math.min(newTop, canvasRect.bottom - msgBoxRect.height));
+
+                msgBox.style.left = `${newLeft}px`;
+                msgBox.style.top = `${newTop}px`;
+            }
+
+            showMessage(text) {
+                this.messageText.innerHTML = text;
+            }
+
+            isWaitingForInput() {
+                return !!this.waitingFor;
+            }
+
+            handleInput(inputType, data) {
+                if (!this.waitingFor || this.waitingFor.type !== inputType) return false;
+                
+                if (this.waitingFor.condition) {
+                    if (this.waitingFor.condition(data)) {
+                        this.nextStep();
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            checkCondition(conditionType, data) {
+                 if (!this.waitingFor || this.waitingFor.type !== conditionType) return false;
+                 if (this.waitingFor.condition) {
+                       if(this.waitingFor.condition(data)) {
+                           this.nextStep();
+                           return true;
+                       }
+                 } else {
+                       this.nextStep();
+                       return true;
+                 }
+                 return false;
+            }
+
+            getWaveConfig() {
+                return [{ type: 'standard' }, { type: 'standard' }];
+            }
+
+            end() {
+                this.overlay.style.display = 'none';
+                window.location.reload();
+            }
         }
         
         // --- LÓGICA DE LA INTERFAZ Y EL MENÚ ---
@@ -2573,8 +2794,15 @@
             function actuallyLaunchGame(mapId, savedData, difficulty) {
                 stopMainMenuAnimation();
                 document.body.style.backgroundColor = 'var(--primary-bg)';
-                document.body.className = ''; 
-                document.body.classList.add(`theme-${mapId || 'direct'}`);
+                
+                // CORRECCIÓN: Función para cambiar el tema sin borrar otras clases
+                function setBodyTheme(themeName) {
+                    document.body.classList.remove('theme-classic', 'theme-serpentine', 'theme-crossroads', 'theme-direct');
+                    if (themeName) {
+                        document.body.classList.add(`theme-${themeName}`);
+                    }
+                }
+                setBodyTheme(mapId || 'direct');
 
                 mapSelectionScreen.style.display = 'none';
                 playOptionsModal.style.display = 'none';
@@ -2613,8 +2841,14 @@
             function launchTutorial() {
                 stopMainMenuAnimation();
                 document.body.style.backgroundColor = 'var(--primary-bg)';
-                document.body.className = ''; 
-                document.body.classList.add('theme-classic');
+                
+                function setBodyTheme(themeName) {
+                    document.body.classList.remove('theme-classic', 'theme-serpentine', 'theme-crossroads', 'theme-direct');
+                    if (themeName) {
+                        document.body.classList.add(`theme-${themeName}`);
+                    }
+                }
+                setBodyTheme('classic');
 
                 mainMenuScreen.style.display = 'none';
                 gameUiContainer.style.display = 'flex';
