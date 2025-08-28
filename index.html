@@ -20,7 +20,10 @@
       &quot;orientation&quot;: &quot;landscape&quot;,
       &quot;background_color&quot;: &quot;#000000&quot;,
       &quot;theme_color&quot;: &quot;#000000&quot;,
-      &quot;icons&quot;: [{ &quot;src&quot;: &quot;Assets/icon-png-tdp.png&quot;, &quot;sizes&quot;: &quot;192x192&quot;, &quot;type&quot;: &quot;image/png&quot; }]
+      &quot;icons&quot;: [
+        { &quot;src&quot;: &quot;Assets/icon-png-tdp.png&quot;, &quot;sizes&quot;: &quot;192x192&quot;, &quot;type&quot;: &quot;image/png&quot;, &quot;purpose&quot;: &quot;any maskable&quot; },
+        { &quot;src&quot;: &quot;Assets/icon-png-tdp.png&quot;, &quot;sizes&quot;: &quot;512x512&quot;, &quot;type&quot;: &quot;image/png&quot;, &quot;purpose&quot;: &quot;any maskable&quot; }
+      ]
     }">
 
     <!-- BIBLIOTECA DE SONIDO AÑADIDA -->
@@ -3185,7 +3188,6 @@
             const menuVolumeButton = document.getElementById('menu-volume-button');
             const menuVolumeSlider = document.getElementById('menu-volume-slider');
             let isMuted = false;
-            let isMenuMuted = false;
             
             const masterVolume = new Tone.Volume(0).toDestination();
             const uiClickSound = new Tone.Synth({
@@ -3209,7 +3211,7 @@
                 const savedVolume = localStorage.getItem('td_volume');
                 const savedMute = localStorage.getItem('td_muted') === 'true';
 
-                const volume = savedVolume !== null ? parseFloat(savedVolume) : 0.5;
+                const volume = savedVolume !== null ? parseFloat(savedVolume) : 0.25; // Default 25%
                 isMuted = savedMute;
                 
                 const toDecibels = (value) => {
@@ -3217,37 +3219,59 @@
                 };
 
                 bgm.volume = volume;
+                menuBgm.volume = volume;
                 masterVolume.volume.value = toDecibels(volume);
                 volumeSlider.value = volume;
+                menuVolumeSlider.value = volume;
                 
                 if (isMuted) {
                     bgm.muted = true;
+                    menuBgm.muted = true;
                     masterVolume.mute = true;
                     volumeButton.textContent = '🔇';
+                    menuVolumeButton.textContent = '🔇';
                 } else {
                     updateVolumeIcon(volume, volumeButton);
+                    updateVolumeIcon(volume, menuVolumeButton);
                 }
 
                 volumeButton.addEventListener('click', () => {
                     volumeSlider.classList.toggle('hidden');
                 });
+                 menuVolumeButton.addEventListener('click', () => {
+                    menuVolumeSlider.classList.toggle('hidden');
+                });
 
-                volumeSlider.addEventListener('input', (e) => {
+                function handleVolumeChange(e) {
                     const newVolume = parseFloat(e.target.value);
                     bgm.volume = newVolume;
+                    menuBgm.volume = newVolume;
+                    if (menuMusicPlayer) {
+                         menuMusicPlayer.volume.value = toDecibels(newVolume);
+                    }
                     masterVolume.volume.value = toDecibels(newVolume);
+                    
                     isMuted = newVolume === 0;
                     bgm.muted = isMuted;
+                    menuBgm.muted = isMuted;
+                    if(menuMusicPlayer) menuMusicPlayer.mute = isMuted;
                     masterVolume.mute = isMuted;
+
                     localStorage.setItem('td_volume', newVolume);
                     localStorage.setItem('td_muted', isMuted);
+
+                    volumeSlider.value = newVolume;
+                    menuVolumeSlider.value = newVolume;
                     updateVolumeIcon(newVolume, volumeButton);
-                });
+                    updateVolumeIcon(newVolume, menuVolumeButton);
+                }
+
+                volumeSlider.addEventListener('input', handleVolumeChange);
+                menuVolumeSlider.addEventListener('input', handleVolumeChange);
             }
             
             function updateVolumeIcon(volume, button) {
-                let mutedState = button.id.includes('menu') ? isMenuMuted : isMuted;
-                if (mutedState || volume === 0) {
+                if (isMuted || volume === 0) {
                     button.textContent = '🔇';
                 } else if (volume < 0.5) {
                     button.textContent = '🔉';
@@ -3274,11 +3298,16 @@
                 if (menuMusicPlayer) return; 
                 try {
                     await Tone.start();
+                    const initialVolume = parseFloat(localStorage.getItem('td_volume') || 0.25);
+                    const initialMute = localStorage.getItem('td_muted') === 'true';
+                    const dbVolume = initialVolume === 0 ? -Infinity : Tone.gainToDb(initialVolume);
+
                     menuMusicPlayer = new Tone.Player({
                         url: "Music/BGM/silent-shadows-376165.mp3",
                         loop: true,
                         autostart: true,
-                        volume: -12 // -12dB is roughly 25% volume
+                        volume: dbVolume,
+                        mute: initialMute
                     }).toDestination();
                     
                     menuMusicAnalyser = new Tone.Analyser('waveform', 128);
@@ -3298,25 +3327,7 @@
                 }
             }
             
-            function initMenuMusicControl() {
-                menuVolumeButton.addEventListener('click', () => {
-                    menuVolumeSlider.classList.toggle('hidden');
-                });
-
-                menuVolumeSlider.addEventListener('input', (e) => {
-                    const newVolume = parseFloat(e.target.value);
-                    if (menuMusicPlayer) {
-                        const dbVolume = newVolume === 0 ? -Infinity : Tone.gainToDb(newVolume);
-                        menuMusicPlayer.volume.value = dbVolume;
-                    }
-                    isMenuMuted = newVolume === 0;
-                    if(menuMusicPlayer) menuMusicPlayer.mute = isMenuMuted;
-                    updateVolumeIcon(newVolume, menuVolumeButton);
-                });
-            }
-
             initMusic();
-            initMenuMusicControl();
             setupMainMenu();
             playMenuMusic();
 
