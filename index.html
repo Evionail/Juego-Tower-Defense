@@ -471,7 +471,7 @@
     </div>
 
     <div id="main-menu-screen" class="screen">
-        <div id="version-display">v2.6.1</div>
+        <div id="version-display">v2.6.5</div>
         <div id="menu-volume-control">
             <button id="menu-volume-button" class="control-button">🔊</button>
             <input type="range" id="menu-volume-slider" min="0" max="1" step="0.01" value="0.25" class="hidden">
@@ -2617,8 +2617,8 @@
                         if (this.pulse > 0) {
                             this.pulse--;
                             const pulseRatio = this.pulse / 10;
-                            this.size = this.baseSize + 3 * pulseRatio;
-                            this.opacity = this.baseOpacity + 0.5 * pulseRatio;
+                            this.size = this.baseSize + 8 * pulseRatio;
+                            this.opacity = this.baseOpacity + 0.8 * pulseRatio;
                         } else {
                             this.size = this.baseSize;
                             this.opacity = this.baseOpacity;
