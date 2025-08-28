@@ -9,8 +9,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="TD Progresivo">
+    <link rel="apple-touch-icon" href="/Assets/icon-png-tdp.png">
     
-    <!-- PWA Manifest for Android - CORRECCIÓN: 'display' cambiado a 'standalone' para mayor compatibilidad -->
+    <!-- PWA Manifest for Android -->
     <link rel="manifest" href="data:application/manifest+json,{
       &quot;name&quot;: &quot;Tower Defense Progresivo&quot;,
       &quot;short_name&quot;: &quot;TD Progresivo&quot;,
@@ -18,10 +19,9 @@
       &quot;display&quot;: &quot;standalone&quot;,
       &quot;orientation&quot;: &quot;landscape&quot;,
       &quot;background_color&quot;: &quot;#000000&quot;,
-      &quot;theme_color&quot;: &quot;#000000&quot;
+      &quot;theme_color&quot;: &quot;#000000&quot;,
+      &quot;icons&quot;: [{ &quot;src&quot;: &quot;/Assets/icon-png-tdp.png&quot;, &quot;sizes&quot;: &quot;192x192&quot;, &quot;type&quot;: &quot;image/png&quot; }]
     }">
-
-    <!-- <link rel="apple-touch-icon" href="icon.png"> -->
 
     <!-- BIBLIOTECA DE SONIDO AÑADIDA -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
@@ -453,10 +453,11 @@
         .dev-options { display: flex; flex-direction: column; gap: 15px; align-items: center; }
         .dev-options .modal-button { width: 200px; }
         .dev-options .modal-button.active { background-color: var(--highlight-color); color: var(--primary-bg); }
-        #volume-control-container { display: flex; align-items: center; gap: 10px; }
-        #volume-slider { -webkit-appearance: none; appearance: none; width: 100px; height: 8px; background: #555; border-radius: 4px; outline: none; cursor: pointer; transition: opacity .2s; }
-        #volume-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; background: var(--highlight-color); border-radius: 50%; border: 2px solid var(--secondary-bg); cursor: pointer; }
-        #volume-slider::-moz-range-thumb { width: 18px; height: 18px; background: var(--highlight-color); border-radius: 50%; border: 2px solid var(--secondary-bg); cursor: pointer; }
+        #volume-control-container, #menu-volume-control { display: flex; align-items: center; gap: 10px; }
+        #menu-volume-control { position: absolute; top: 20px; right: 20px; z-index: 2;}
+        #volume-slider, #menu-volume-slider { -webkit-appearance: none; appearance: none; width: 100px; height: 8px; background: #555; border-radius: 4px; outline: none; cursor: pointer; transition: opacity .2s; }
+        #volume-slider::-webkit-slider-thumb, #menu-volume-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; background: var(--highlight-color); border-radius: 50%; border: 2px solid var(--secondary-bg); cursor: pointer; }
+        #volume-slider::-moz-range-thumb, #menu-volume-slider::-moz-range-thumb { width: 18px; height: 18px; background: var(--highlight-color); border-radius: 50%; border: 2px solid var(--secondary-bg); cursor: pointer; }
         .hidden { display: none; }
         @media (orientation: portrait) { #game-ui-container, #map-selection-screen, #game-over-modal, #victory-modal, #main-menu-screen { display: none !important; } #rotate-screen { display: flex; } }
     </style>
@@ -470,6 +471,11 @@
     </div>
 
     <div id="main-menu-screen" class="screen">
+        <div id="version-display">v2.6.0</div>
+        <div id="menu-volume-control">
+            <button id="menu-volume-button" class="control-button">🔊</button>
+            <input type="range" id="menu-volume-slider" min="0" max="1" step="0.01" value="0.25" class="hidden">
+        </div>
         <h1>Tower Defense Progresivo</h1>
         <div class="menu-buttons">
             <button id="play-button" class="menu-button">Jugar</button>
@@ -477,7 +483,6 @@
             <button id="tutorial-button" class="menu-button">Tutorial</button>
             <button id="exit-button" class="menu-button">Salir</button>
         </div>
-        <div id="version-display">v2.5.0</div>
     </div>
 
     <div id="map-selection-screen" class="screen">
@@ -734,6 +739,7 @@
     </div>
     
     <audio id="bgm" loop src="Music/BGM/battleThemeA.mp3"></audio>
+    <audio id="menu-bgm" loop src="Music/BGM/silent-shadows-376165.mp3"></audio>
 
 
     <script>
@@ -2578,6 +2584,8 @@
             // --- LÓGICA DEL NUEVO MENÚ ---
             let particles = [];
             let animationFrameId;
+            let menuMusicPlayer;
+            let menuMusicAnalyser;
 
             function setupMainMenu() {
                 menuCanvas.style.display = 'block';
@@ -2593,15 +2601,28 @@
                         this.x = Math.random() * menuCanvas.width;
                         this.y = Math.random() * menuCanvas.height;
                         this.size = Math.random() * 2 + 1;
+                        this.baseSize = this.size;
                         this.speedX = (Math.random() - 0.5) * 0.5;
                         this.speedY = (Math.random() - 0.5) * 0.5;
                         this.opacity = Math.random() * 0.5 + 0.2;
+                        this.baseOpacity = this.opacity;
+                        this.pulse = 0;
                     }
                     update() {
                         this.x += this.speedX;
                         this.y += this.speedY;
                         if (this.x < 0 || this.x > menuCanvas.width) this.speedX *= -1;
                         if (this.y < 0 || this.y > menuCanvas.height) this.speedY *= -1;
+
+                        if (this.pulse > 0) {
+                            this.pulse--;
+                            const pulseRatio = this.pulse / 10;
+                            this.size = this.baseSize + 3 * pulseRatio;
+                            this.opacity = this.baseOpacity + 0.5 * pulseRatio;
+                        } else {
+                            this.size = this.baseSize;
+                            this.opacity = this.baseOpacity;
+                        }
                     }
                     draw() {
                         ctx.beginPath();
@@ -2621,8 +2642,21 @@
                     }
                 }
 
+                let lastBeat = 0;
                 function animateParticles() {
                     ctx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
+                    
+                    if (menuMusicAnalyser) {
+                        const values = menuMusicAnalyser.getValue();
+                        const avg = values.reduce((sum, val) => sum + Math.abs(val), 0) / values.length;
+                        
+                        if (avg > 0.05 && (Date.now() - lastBeat > 150)) { // Threshold y cooldown para evitar demasiados saltos
+                            lastBeat = Date.now();
+                            const particleToPulse = particles[Math.floor(Math.random() * particles.length)];
+                            if(particleToPulse) particleToPulse.pulse = 10;
+                        }
+                    }
+
                     particles.forEach(p => {
                         p.update();
                         p.draw();
@@ -2644,12 +2678,6 @@
                 if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
                  menuCanvas.style.display = 'none';
             }
-
-            // Iniciar animación del menú principal por defecto
-            if (window.getComputedStyle(mainMenuScreen).display !== 'none') {
-                setupMainMenu();
-            }
-
 
             function setupGameListeners() {
                 // --- SECRET CODE LISTENER ---
@@ -2814,6 +2842,7 @@
 
             function actuallyLaunchGame(mapId, savedData, difficulty) {
                 stopMainMenuAnimation();
+                stopMenuMusic();
                 document.body.style.backgroundColor = 'var(--primary-bg)';
                 
                 function setBodyTheme(themeName) {
@@ -2860,6 +2889,7 @@
 
             function launchTutorial() {
                 stopMainMenuAnimation();
+                stopMenuMusic();
                 document.body.style.backgroundColor = 'var(--primary-bg)';
                 
                 function setBodyTheme(themeName) {
@@ -3149,11 +3179,13 @@
 
             // --- Lógica de Música y Volumen ---
             const bgm = document.getElementById('bgm');
+            const menuBgm = document.getElementById('menu-bgm');
             const volumeButton = document.getElementById('volume-button');
             const volumeSlider = document.getElementById('volume-slider');
+            const menuVolumeButton = document.getElementById('menu-volume-button');
+            const menuVolumeSlider = document.getElementById('menu-volume-slider');
             let isMuted = false;
             
-            // --- NUEVOS ELEMENTOS DE SONIDO ---
             const masterVolume = new Tone.Volume(0).toDestination();
             const uiClickSound = new Tone.Synth({
                 oscillator: { type: 'sine' },
@@ -3167,7 +3199,6 @@
                 uiClickSound.triggerAttackRelease("G5", "32n");
             };
 
-            // Asignar el sonido a todos los botones
             document.querySelectorAll('button').forEach(button => {
                 button.addEventListener('click', playClickSound);
             });
@@ -3180,7 +3211,6 @@
                 const volume = savedVolume !== null ? parseFloat(savedVolume) : 0.5;
                 isMuted = savedMute;
                 
-                // Función para convertir de [0, 1] a decibelios
                 const toDecibels = (value) => {
                     return value === 0 ? -Infinity : Tone.gainToDb(value);
                 };
@@ -3194,7 +3224,7 @@
                     masterVolume.mute = true;
                     volumeButton.textContent = '🔇';
                 } else {
-                    updateVolumeIcon(volume);
+                    updateVolumeIcon(volume, volumeButton);
                 }
 
                 volumeButton.addEventListener('click', () => {
@@ -3205,24 +3235,22 @@
                     const newVolume = parseFloat(e.target.value);
                     bgm.volume = newVolume;
                     masterVolume.volume.value = toDecibels(newVolume);
-                    
                     isMuted = newVolume === 0;
                     bgm.muted = isMuted;
                     masterVolume.mute = isMuted;
-
                     localStorage.setItem('td_volume', newVolume);
                     localStorage.setItem('td_muted', isMuted);
-                    updateVolumeIcon(newVolume);
+                    updateVolumeIcon(newVolume, volumeButton);
                 });
             }
-
-            function updateVolumeIcon(volume) {
+            
+            function updateVolumeIcon(volume, button) {
                 if (isMuted || volume === 0) {
-                    volumeButton.textContent = '🔇';
+                    button.textContent = '🔇';
                 } else if (volume < 0.5) {
-                    volumeButton.textContent = '🔉';
+                    button.textContent = '🔉';
                 } else {
-                    volumeButton.textContent = '🔊';
+                    button.textContent = '🔊';
                 }
             }
 
@@ -3231,7 +3259,7 @@
                     await Tone.start();
                     await bgm.play();
                 } catch(e) {
-                    console.warn("La reproducción de audio fue bloqueada por el navegador.");
+                    console.warn("La reproducción de audio del juego fue bloqueada por el navegador.");
                 }
             }
 
