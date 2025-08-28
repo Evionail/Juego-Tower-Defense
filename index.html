@@ -3185,6 +3185,7 @@
             const menuVolumeButton = document.getElementById('menu-volume-button');
             const menuVolumeSlider = document.getElementById('menu-volume-slider');
             let isMuted = false;
+            let isMenuMuted = false;
             
             const masterVolume = new Tone.Volume(0).toDestination();
             const uiClickSound = new Tone.Synth({
@@ -3245,7 +3246,8 @@
             }
             
             function updateVolumeIcon(volume, button) {
-                if (isMuted || volume === 0) {
+                let mutedState = button.id.includes('menu') ? isMenuMuted : isMuted;
+                if (mutedState || volume === 0) {
                     button.textContent = '🔇';
                 } else if (volume < 0.5) {
                     button.textContent = '🔉';
@@ -3267,8 +3269,54 @@
                 bgm.pause();
                 bgm.currentTime = 0;
             }
+            
+            async function playMenuMusic() {
+                if (menuMusicPlayer) return; 
+                try {
+                    await Tone.start();
+                    menuMusicPlayer = new Tone.Player({
+                        url: "Music/BGM/silent-shadows-376165.mp3",
+                        loop: true,
+                        autostart: true,
+                        volume: -12 // -12dB is roughly 25% volume
+                    }).toDestination();
+                    
+                    menuMusicAnalyser = new Tone.Analyser('waveform', 128);
+                    menuMusicPlayer.connect(menuMusicAnalyser);
+
+                } catch(e) {
+                    console.warn("La reproducción de audio del menú fue bloqueada por el navegador.", e);
+                }
+            }
+
+            function stopMenuMusic() {
+                if (menuMusicPlayer) {
+                    menuMusicPlayer.stop();
+                    menuMusicPlayer.dispose();
+                    menuMusicPlayer = null;
+                    menuMusicAnalyser = null;
+                }
+            }
+            
+            function initMenuMusicControl() {
+                menuVolumeButton.addEventListener('click', () => {
+                    menuVolumeSlider.classList.toggle('hidden');
+                });
+
+                menuVolumeSlider.addEventListener('input', (e) => {
+                    const newVolume = parseFloat(e.target.value);
+                    if (menuMusicPlayer) {
+                        const dbVolume = newVolume === 0 ? -Infinity : Tone.gainToDb(newVolume);
+                        menuMusicPlayer.volume.value = dbVolume;
+                    }
+                    isMenuMuted = newVolume === 0;
+                    if(menuMusicPlayer) menuMusicPlayer.mute = isMenuMuted;
+                    updateVolumeIcon(newVolume, menuVolumeButton);
+                });
+            }
 
             initMusic();
+            initMenuMusicControl();
 
 
             document.querySelectorAll('.map-button').forEach(button => {
