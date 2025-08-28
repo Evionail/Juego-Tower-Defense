@@ -471,7 +471,7 @@
     </div>
 
     <div id="main-menu-screen" class="screen">
-        <div id="version-display">v2.6.0</div>
+        <div id="version-display">v2.6.1</div>
         <div id="menu-volume-control">
             <button id="menu-volume-button" class="control-button">🔊</button>
             <input type="range" id="menu-volume-slider" min="0" max="1" step="0.01" value="0.25" class="hidden">
@@ -3317,6 +3317,8 @@
 
             initMusic();
             initMenuMusicControl();
+            setupMainMenu();
+            playMenuMusic();
 
 
             document.querySelectorAll('.map-button').forEach(button => {
