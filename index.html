@@ -779,39 +779,58 @@
             'crossroads': [ { x: 0, y: 7 }, { x: 10, y: 2 }, { x: 10, y: 12 }, { x: 20, y: 7 } ],
             'direct': [ { x: 0, y: 7 }, { x: 20, y: 2 } ]
         };
+        // --- MODIFICACIÓN: Se añaden las rutas de los assets a las torres ---
         const TOWER_TYPES = {
             'arrow': { 
-                name: 'Flechas', emoji: '🏹', desc: 'Rápida y barata. La única defensa inicial contra enemigos aéreos.', cost: 50, damage: 15, range: 100, fireRate: 60, projectileSpeed: 6.7, color: '#8BC34A', projectileColor: '#CDDC39', unlockWave: 1, upgrade: { damage: 8, range: 10, fireRate: 5 }, canHitFlying: true,
+                name: 'Flechas', emoji: '🏹', desc: 'Rápida y barata. La única defensa inicial contra enemigos aéreos.', cost: 50, damage: 15, range: 100, fireRate: 60, projectileSpeed: 6.7, color: '#8BC34A', projectileColor: '#CDDC39', unlockWave: 1, upgrade: { damage: 8, range: 10, fireRate: 5 }, canHitFlying: true, asset: 'Assets/Towers/Flechas.png',
                 evolutions: {
                     level: 8,
                     paths: {
-                        pathA: { name: 'Metralleta', emoji: '🎯', desc: 'Dispara ráfagas increíblemente rápidas a corto alcance.', damage: 19, range: 135, fireRate: 5, special: 'gatling' },
-                        pathB: { name: 'Francotirador', emoji: '🔭', desc: 'Inflige daño masivo a un enorme alcance, pero muy lentamente. Prioriza enemigos de élite y su daño aumenta con cada oleada.', damage: 1013, range: 280, fireRate: 222, special: 'sniper', projectileSpeed: 15 }
+                        pathA: { name: 'Metralleta', emoji: '🎯', desc: 'Dispara ráfagas increíblemente rápidas a corto alcance.', damage: 19, range: 135, fireRate: 5, special: 'gatling', asset: 'Assets/Towers/Metralleta.png' },
+                        pathB: { name: 'Francotirador', emoji: '🔭', desc: 'Inflige daño masivo a un enorme alcance, pero muy lentamente. Prioriza enemigos de élite y su daño aumenta con cada oleada.', damage: 1013, range: 280, fireRate: 222, special: 'sniper', projectileSpeed: 15, asset: 'Assets/Towers/Sniper.png' }
                     }
                 }
             },
             'cannon': { 
-                name: 'Cañón', emoji: '💣', desc: 'Lenta pero poderosa. Su daño en área es ideal contra grupos de enemigos terrestres.', cost: 120, damage: 40, range: 80, fireRate: 120, projectileSpeed: 5.3, color: '#607D8B', projectileColor: '#212121', unlockWave: 3, splashRadius: 65, upgrade: { damage: 25, range: 5, splashRadius: 8, fireRate: 10 }, canHitFlying: false,
+                name: 'Cañón', emoji: '💣', desc: 'Lenta pero poderosa. Su daño en área es ideal contra grupos de enemigos terrestres.', cost: 120, damage: 40, range: 80, fireRate: 120, projectileSpeed: 5.3, color: '#607D8B', projectileColor: '#212121', unlockWave: 3, splashRadius: 65, upgrade: { damage: 25, range: 5, splashRadius: 8, fireRate: 10 }, canHitFlying: false, asset: 'Assets/Towers/Canon.png',
                 evolutions: {
                     level: 8,
                     paths: {
-                        pathA: { name: 'Bomba Singular', emoji: '🌀', desc: 'No daña, pero atrae a los enemigos cercanos a un solo punto.', damage: 5, fireRate: 180, splashRadius: 120, special: 'pull', projectileColor: '#AB47BC' },
-                        pathB: { name: 'Bomba Disforme', emoji: '🌌', desc: 'No daña, pero teletransporta a los enemigos hacia atrás en el camino. Tiene 18 disparos por oleada.', damage: 0, splashRadius: 80, special: 'teleport', shotsPerWave: 18, projectileColor: '#5C6BC0' }
+                        pathA: { name: 'Bomba Singular', emoji: '🌀', desc: 'No daña, pero atrae a los enemigos cercanos a un solo punto.', damage: 5, fireRate: 180, splashRadius: 120, special: 'pull', projectileColor: '#AB47BC', asset: 'Assets/Towers/Singularidad.png' },
+                        pathB: { name: 'Bomba Disforme', emoji: '🌌', desc: 'No daña, pero teletransporta a los enemigos hacia atrás en el camino. Tiene 18 disparos por oleada.', damage: 0, splashRadius: 80, special: 'teleport', shotsPerWave: 18, projectileColor: '#5C6BC0', asset: 'Assets/Towers/Disforme.png' }
                     }
                 }
             },
             'laser': {
-                name: 'Láser', emoji: '⚡', desc: 'Defensa aérea fundamental. Dispara un haz de energía instantáneo a enemigos voladores.', cost: 80, damage: 100, range: 120, fireRate: 70, projectileSpeed: 50, color: '#F44336', projectileColor: '#FFCDD2', unlockWave: 4, upgrade: { damage: 35, range: 10, fireRate: 6 }, canHitFlying: true, canHitGround: false, projectileType: 'beam',
+                name: 'Láser', emoji: '⚡', desc: 'Defensa aérea fundamental. Dispara un haz de energía instantáneo a enemigos voladores.', cost: 80, damage: 100, range: 120, fireRate: 70, projectileSpeed: 50, color: '#F44336', projectileColor: '#FFCDD2', unlockWave: 4, upgrade: { damage: 35, range: 10, fireRate: 6 }, canHitFlying: true, canHitGround: false, projectileType: 'beam', asset: 'Assets/Towers/Laser.png',
                 evolutions: {
                     level: 8,
                     paths: {
-                        pathA: { name: 'Torre Tesla', emoji: '🌩️', desc: 'Lanza un arco eléctrico que salta entre múltiples enemigos, aéreos y terrestres.', damage: 500, range: 175, fireRate: 78, special: 'tesla', canHitGround: true, chain: { targets: 5 }, evolutionCostMultiplier: 2 },
-                        pathB: { name: 'Cañón de Plasma', emoji: '🔥', desc: 'Canaliza un rayo de plasma continuo sobre un enemigo aéreo, aumentando su daño con el tiempo. Prioriza a los jefes.', damage: 100, range: 200, fireRate: 10, special: 'plasma', projectileType: 'beam', rampUp: { damage: 200, maxStacks: 50 } }
+                        pathA: { name: 'Torre Tesla', emoji: '🌩️', desc: 'Lanza un arco eléctrico que salta entre múltiples enemigos, aéreos y terrestres.', damage: 500, range: 175, fireRate: 78, special: 'tesla', canHitGround: true, chain: { targets: 5 }, evolutionCostMultiplier: 2, asset: 'Assets/Towers/Tesla.png' },
+                        pathB: { name: 'Cañón de Plasma', emoji: '🔥', desc: 'Canaliza un rayo de plasma continuo sobre un enemigo aéreo, aumentando su daño con el tiempo. Prioriza a los jefes.', damage: 100, range: 200, fireRate: 10, special: 'plasma', projectileType: 'beam', rampUp: { damage: 200, maxStacks: 50 }, asset: 'Assets/Towers/Pulsar.png' }
                     }
                 }
             },
-            'acid': { name: 'Ácido', emoji: '🧪', desc: 'Aplica un veneno que daña con el tiempo. El daño del veneno escala con el daño de la torre.', cost: 100, damage: 12, range: 110, fireRate: 108, projectileSpeed: 6.7, color: '#7FFF00', projectileColor: '#ADFF2F', unlockWave: 6, acid: { multiplier: 0.08, duration: 180 }, upgrade: { damage: 6, acidMultiplier: 0.04, range: 10, fireRate: 7 }, canHitFlying: false },
-            'ice': { name: 'Hielo', emoji: '❄️', desc: 'Aplica una ralentización en un área que se vuelve más potente con el daño. Mejorar el rango aumenta el área de efecto.', cost: 150, damage: 5, range: 120, fireRate: 90, projectileSpeed: 8, color: '#03A9F4', projectileColor: '#B3E5FC', unlockWave: 9, slow: { baseMultiplier: 0.6, damageScale: 0.002, maxSlow: 0.35, duration: 120 }, slowRadius: 15, upgrade: { damage: 5, range: 10, slowRadius: 10, fireRate: 8 }, canHitFlying: false }
+            'acid': { 
+                name: 'Ácido', emoji: '🧪', desc: 'Aplica un veneno que daña con el tiempo. El daño del veneno escala con el daño de la torre.', cost: 100, damage: 12, range: 110, fireRate: 108, projectileSpeed: 6.7, color: '#7FFF00', projectileColor: '#ADFF2F', unlockWave: 6, acid: { multiplier: 0.08, duration: 180 }, upgrade: { damage: 6, acidMultiplier: 0.04, range: 10, fireRate: 7 }, canHitFlying: false, asset: 'Assets/Towers/Acido.png',
+                evolutions: {
+                    level: 8,
+                    paths: {
+                        pathA: { name: 'Pantano de Alquitrán', emoji: '🛢️', desc: 'Crea charcos más grandes y duraderos que ralentizan y dañan.', asset: 'Assets/Towers/Alquitran.png' },
+                        pathB: { name: 'Aspersor de Ácido', emoji: '💦', desc: 'Dispara proyectiles que se dividen al impactar, afectando a más enemigos.', asset: 'Assets/Towers/Aspersor.png' }
+                    }
+                }
+            },
+            'ice': { 
+                name: 'Hielo', emoji: '❄️', desc: 'Aplica una ralentización en un área que se vuelve más potente con el daño. Mejorar el rango aumenta el área de efecto.', cost: 150, damage: 5, range: 120, fireRate: 90, projectileSpeed: 8, color: '#03A9F4', projectileColor: '#B3E5FC', unlockWave: 9, slow: { baseMultiplier: 0.6, damageScale: 0.002, maxSlow: 0.35, duration: 120 }, slowRadius: 15, upgrade: { damage: 5, range: 10, slowRadius: 10, fireRate: 8 }, canHitFlying: false, asset: 'Assets/Towers/Hielo.png',
+                evolutions: {
+                    level: 8,
+                    paths: {
+                        pathA: { name: 'Generador de Ventisca', emoji: '🌪️', desc: 'Crea una ventisca continua que daña y ralentiza a todos los enemigos en un área enorme.', asset: 'Assets/Towers/Tormenta.png' },
+                        pathB: { name: 'Fragmentación Glacial', emoji: '🧊', desc: 'Los enemigos derrotados mientras están congelados explotan, congelando a otros enemigos cercanos.', asset: 'Assets/Towers/Fragmentos.png' }
+                    }
+                }
+            }
         };
         const ENEMY_TYPES = {
             'standard': { name: 'Esbirro', desc: 'Unidad básica terrestre. Débil pero numerosa.', health: 1, speed: 1, value: 1, color: '#E53935', size: 0.8, baseDamage: 10, isFlying: false },
@@ -1946,11 +1965,20 @@
             
             draw(ctx, frameCount) {
                 ctx.save();
-                const coreRadius = TILE_SIZE / 2 - 2;
-                ctx.fillStyle = '#555'; ctx.beginPath(); ctx.arc(this.x, this.y, coreRadius, 0, Math.PI * 2); ctx.fill();
-                ctx.font = `${TILE_SIZE * 0.8}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(this.typeInfo.emoji, this.x, this.y);
+
+                // Dibuja la imagen si está cargada, si no, usa el emoji como fallback.
+                const imgToDraw = TOWER_IMAGES[this.typeInfo.name];
+                if (imgToDraw && imgToDraw.complete && imgToDraw.naturalWidth > 0) {
+                    ctx.drawImage(imgToDraw, this.x - TILE_SIZE / 2, this.y - TILE_SIZE / 2, TILE_SIZE, TILE_SIZE);
+                } else {
+                    const coreRadius = TILE_SIZE / 2 - 2;
+                    ctx.fillStyle = '#555'; ctx.beginPath(); ctx.arc(this.x, this.y, coreRadius, 0, Math.PI * 2); ctx.fill();
+                    ctx.font = `${TILE_SIZE * 0.8}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(this.typeInfo.emoji, this.x, this.y);
+                }
+
                 if (this.disabledTimer > 0) {
+                    const coreRadius = TILE_SIZE / 2 - 2;
                     ctx.fillStyle = 'rgba(50, 50, 50, 0.7)'; ctx.beginPath(); ctx.arc(this.x, this.y, coreRadius, 0, Math.PI * 2); ctx.fill();
                     if (frameCount % 4 < 2) {
                         ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; ctx.lineWidth = 1;
@@ -2524,13 +2552,13 @@
             checkCondition(conditionType, data) {
                  if (!this.waitingFor || this.waitingFor.type !== conditionType) return false;
                  if (this.waitingFor.condition) {
-                       if(this.waitingFor.condition(data)) {
-                           this.nextStep();
-                           return true;
-                       }
+                     if(this.waitingFor.condition(data)) {
+                         this.nextStep();
+                         return true;
+                     }
                  } else {
-                       this.nextStep();
-                       return true;
+                     this.nextStep();
+                     return true;
                  }
                  return false;
             }
@@ -2546,6 +2574,53 @@
         }
         
         // --- LÓGICA DE LA INTERFAZ Y EL MENÚ ---
+        const TOWER_IMAGES = {};
+        const ENEMY_IMAGES = {};
+
+        // --- NUEVA FUNCIÓN DE PRECARGA DE IMÁGENES DE TORRES ---
+        function preloadTowerImages(callback) {
+            let loaded = 0;
+            const towersToLoad = [];
+            for (const type in TOWER_TYPES) {
+                const towerInfo = TOWER_TYPES[type];
+                if (towerInfo.asset) {
+                    towersToLoad.push({ name: towerInfo.name, path: towerInfo.asset });
+                }
+                if (towerInfo.evolutions && towerInfo.evolutions.paths) {
+                    for (const pathKey in towerInfo.evolutions.paths) {
+                        const evoInfo = towerInfo.evolutions.paths[pathKey];
+                        if (evoInfo.asset) {
+                            towersToLoad.push({ name: evoInfo.name, path: evoInfo.asset });
+                        }
+                    }
+                }
+            }
+
+            if (towersToLoad.length === 0) {
+                if (callback) callback();
+                return;
+            }
+
+            towersToLoad.forEach(towerData => {
+                const img = new Image();
+                img.src = towerData.path;
+                TOWER_IMAGES[towerData.name] = img; 
+                img.onload = () => {
+                    loaded++;
+                    if (loaded === towersToLoad.length) {
+                        if (callback) callback();
+                    }
+                };
+                img.onerror = () => {
+                    console.error(`Error al cargar la imagen: ${towerData.path}`);
+                    loaded++; 
+                    if (loaded === towersToLoad.length) {
+                        if (callback) callback();
+                    }
+                };
+            });
+        }
+        
         document.addEventListener('DOMContentLoaded', () => {
             const canvas = document.getElementById('gameCanvas');
             const menuCanvas = document.getElementById('menu-background-canvas');
@@ -2864,7 +2939,7 @@
                 gameUiContainer.style.display = 'flex';
                 
                 game = new Game(canvas, mapId, savedData, false, difficulty);
-                generateImages();
+                generateEnemyImages();
                 setupGameListeners();
                 playMusic();
                 
@@ -2908,7 +2983,7 @@
                 mainMenuScreen.style.display = 'none';
                 gameUiContainer.style.display = 'flex';
                 game = new Game(canvas, 'classic', null, true);
-                generateImages();
+                generateEnemyImages();
                 setupGameListeners();
                 playMusic();
                 
@@ -2926,7 +3001,7 @@
                     playOptionsModal.style.display = 'flex';
                 } else {
                      if (!localStorage.getItem('hideTutorialPrompt')) {
-                        tutorialPromptModal.style.display = 'flex';
+                         tutorialPromptModal.style.display = 'flex';
                     } else {
                         mainMenuScreen.style.display = 'none';
                         difficultyModal.style.display = 'flex';
@@ -3045,21 +3120,7 @@
                 return { x: xOnNativeCanvas, y: yOnNativeCanvas };
             }
 
-            const TOWER_IMAGES = {};
-            const ENEMY_IMAGES = {};
-
-            function generateImages() {
-                for (const type in TOWER_TYPES) {
-                    const info = TOWER_TYPES[type];
-                    const tempCanvas = document.createElement('canvas'); tempCanvas.width = 50; tempCanvas.height = 50;
-                    const tempCtx = tempCanvas.getContext('2d');
-                    tempCtx.fillStyle = '#555'; tempCtx.beginPath(); tempCtx.arc(25, 25, 23, 0, Math.PI * 2); tempCtx.fill();
-                    tempCtx.font = '35px sans-serif';
-                    tempCtx.textAlign = 'center';
-                    tempCtx.textBaseline = 'middle';
-                    tempCtx.fillText(info.emoji, 25, 25);
-                    TOWER_IMAGES[type] = tempCanvas.toDataURL();
-                }
+            function generateEnemyImages() { // Las torres ahora se precargan desde assets
                 for (const type in ENEMY_TYPES) {
                     const info = ENEMY_TYPES[type];
                     const tempCanvas = document.createElement('canvas'); tempCanvas.width = 50; tempCanvas.height = 50;
@@ -3080,10 +3141,13 @@
                     card.className = 'info-card';
 
                     if (game && game.unlockedTowers.has(type)) {
+                        const img = TOWER_IMAGES[towerInfo.name];
+                        const imgSrc = (img && img.complete && img.naturalWidth > 0) ? img.src : '';
+
                         const saleValue = Math.floor(towerInfo.cost * 0.7);
                         let html = `
                             <div class="info-card-header">
-                                <img class="visual" src="${TOWER_IMAGES[type]}" alt="${towerInfo.name}">
+                                <img class="visual" src="${imgSrc}" alt="${towerInfo.name}" style="background-color: #444;">
                                 <h4>${towerInfo.name}</h4>
                             </div>
                             <p>${towerInfo.desc}</p>
@@ -3329,9 +3393,13 @@
                 }
             }
             
-            initMusic();
-            setupMainMenu();
-            playMenuMusic();
+            // Se precargan las imágenes y luego se inicia el menú
+            preloadTowerImages(() => {
+                generateEnemyImages();
+                initMusic();
+                setupMainMenu();
+                playMenuMusic();
+            });
 
 
             document.querySelectorAll('.map-button').forEach(button => {
