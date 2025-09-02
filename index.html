@@ -875,6 +875,7 @@
         class Game {
             constructor(canvas, mapId, savedData = null, isTutorial = false, difficulty = 'normal') {
                 this.canvas = canvas; this.ctx = canvas.getContext('2d');
+                this.ctx.imageSmoothingEnabled = false; // <-- Mejora la nitidez de las imágenes
                 this.width = canvas.width; this.height = canvas.height;
                 this.mapId = mapId;
                 this.theme = MAP_THEMES[this.mapId]; // Cargar el tema del mapa
@@ -1491,6 +1492,7 @@
                     options.push({
                         x: menuX + Math.cos(angle) * 50, y: menuY + Math.sin(angle) * 50, radius: 20,
                         label: towerInfo.name, cost: currentCost, color: towerInfo.color,
+                        image: TOWER_IMAGES[towerInfo.name],
                         action: () => this.buildTower(gridX, gridY, type)
                     });
                     angle += angleStep;
@@ -1533,7 +1535,16 @@
                     this.ctx.fillStyle = opt.color; this.ctx.globalAlpha = 0.8; this.ctx.fill(); this.ctx.globalAlpha = 1;
                     this.ctx.strokeStyle = 'white'; this.ctx.stroke();
                     this.ctx.fillStyle = 'white';
-                    this.ctx.fillText(opt.label, opt.x, opt.y - 8);
+
+                    // Si es un menú de construcción y la imagen existe, dibuja la imagen
+                    if (this.activeMenu.type === 'build' && opt.image && opt.image.complete) {
+                        const imgSize = opt.radius * 1.5;
+                        this.ctx.drawImage(opt.image, opt.x - imgSize / 2, opt.y - imgSize / 2 - 5, imgSize, imgSize);
+                    } else {
+                        // Si no, dibuja el texto (para mejorar/vender)
+                        this.ctx.fillText(opt.label, opt.x, opt.y - 8);
+                    }
+                    
                     if (opt.label === 'Mejorar' && this.activeMenu.target.upgradeCount >= this.activeMenu.target.MAX_UPGRADES) {
                         this.ctx.font = 'bold 14px Segoe UI';
                         this.ctx.fillText('MAX', opt.x, opt.y + 8);
@@ -1966,11 +1977,25 @@
             draw(ctx, frameCount) {
                 ctx.save();
 
+                // Dibuja una base para la torre
+                const baseRadius = TILE_SIZE / 2 - 4;
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, baseRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#555';
+                ctx.stroke();
+
+
                 // Dibuja la imagen si está cargada, si no, usa el emoji como fallback.
                 const imgToDraw = TOWER_IMAGES[this.typeInfo.name];
+                const drawSize = TILE_SIZE * 1.4; // Hacemos la imagen un poco más grande que la celda.
+                
                 if (imgToDraw && imgToDraw.complete && imgToDraw.naturalWidth > 0) {
-                    ctx.drawImage(imgToDraw, this.x - TILE_SIZE / 2, this.y - TILE_SIZE / 2, TILE_SIZE, TILE_SIZE);
+                    // Centramos la imagen para que el tamaño mayor no la desplace.
+                    ctx.drawImage(imgToDraw, this.x - drawSize / 2, this.y - drawSize / 2, drawSize, drawSize);
                 } else {
+                    // Fallback al emoji si la imagen no carga
                     const coreRadius = TILE_SIZE / 2 - 2;
                     ctx.fillStyle = '#555'; ctx.beginPath(); ctx.arc(this.x, this.y, coreRadius, 0, Math.PI * 2); ctx.fill();
                     ctx.font = `${TILE_SIZE * 0.8}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -2939,7 +2964,6 @@
                 gameUiContainer.style.display = 'flex';
                 
                 game = new Game(canvas, mapId, savedData, false, difficulty);
-                generateEnemyImages();
                 setupGameListeners();
                 playMusic();
                 
@@ -2983,7 +3007,6 @@
                 mainMenuScreen.style.display = 'none';
                 gameUiContainer.style.display = 'flex';
                 game = new Game(canvas, 'classic', null, true);
-                generateEnemyImages();
                 setupGameListeners();
                 playMusic();
                 
@@ -3412,3 +3435,4 @@
     </script>
 </body>
 </html>
+
